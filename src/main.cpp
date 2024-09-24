@@ -1,6 +1,9 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
+// Potentiomètre relié à GPIO 34 (Analog ADC1_CH6)
+const int potPin = 34;
+
 const char* ssid = "iPhone de Theo";
 const char* password = "lamoine1972";
 WebServer server(80);
@@ -20,7 +23,7 @@ page += " <link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'
 page += "</head>";
 page += "<body>";
 page += " <div class='w3-card w3-blue w3-padding-small w3-jumbo w3-center'>";
-page += " <p>ÉTAT LED: "; page += texteEtatLed[etatLed]; + "</p>";
+page += " <p>Valeur Potentiomètre : "; page += String(analogRead(potPin)); + "</p>";
 page += " </div>";
 page += " <div class='w3-bar'>";
 page += " <a href='/on' class='w3-bar-item w3-button w3-border w3-jumbo' style='width:50%; height:50%;'>ON</a>";
