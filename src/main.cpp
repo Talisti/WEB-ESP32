@@ -1,41 +1,55 @@
 #include <WiFi.h>
 #include <WebServer.h>
-const char* ssid = "BTS_CIEL";
-const char* password = "ERIR1234";
-WebServer server(80); // Création d'un serveur WEB qui écoute sur le port 80
-const int led = 2; // Led intégrée à l'ESP32
 
-void PageHTML()
+const char* ssid = "iPhone de Theo";
+const char* password = "lamoine1972";
+WebServer server(80);
+const int led = 2;
+bool etatLed = 0;
+char texteEtatLed[2][10] = {"ÉTEINTE!","ALLUMÉE!"};
+void handleRoot()
 {
 String page = "<!DOCTYPE html>";
-page += "<html>";
+page += "<html lang='fr'>";
 page += "<head>";
-page += " <title>Page Projet SNBot</title>";
+page += " <title>Serveur ESP32</title>";
+
+page += " <meta http-equiv='refresh' content='60' name='viewport' content='width=device-width, initial-scale=1' charset='UTF-8' />";
+
+page += " <link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
 page += "</head>";
 page += "<body>";
-page += " <h1> Commande Led </h1>";
-page += " <p><a href='/on'><button>ON</button></a></p>";
-page += " <p><a href='/off'><button>OFF</button></a></p>";
+page += " <div class='w3-card w3-blue w3-padding-small w3-jumbo w3-center'>";
+page += " <p>ÉTAT LED: "; page += texteEtatLed[etatLed]; + "</p>";
+page += " </div>";
+page += " <div class='w3-bar'>";
+page += " <a href='/on' class='w3-bar-item w3-button w3-border w3-jumbo' style='width:50%; height:50%;'>ON</a>";
+page += " <a href='/off' class='w3-bar-item w3-button w3-border w3-jumbo' style='width:50%; height:50%;'>OFF</a>";
+page += " </div>";
+page += " <div class='w3-center w3-padding-16'>";
+page += " <p>Serveur hébergé sur un ESP32</p>";
+page += " <i>Projet SNBot</i>";
+page += " </div>";
 page += "</body>";
 page += "</html>";
-server.setContentLength(page.length());// Indique au navigateur la
-// longueur de la page
+server.setContentLength(page.length());
 server.send(200, "text/html", page);
 }
-void PageOn()
+void handleOn()
 {
+etatLed = 1;
 digitalWrite(led, HIGH);
-server.sendHeader("Location","/"); // Retour à la page d’accueil
-server.send(303); // Le serveur indique au navigateur qu’il l’envoie faire
-//une redirection
+server.sendHeader("Location","/");
+server.send(303);
 }
-void PageOff()
+void handleOff()
 {
+etatLed = 0;
 digitalWrite(led, LOW);
 server.sendHeader("Location","/");
 server.send(303);
 }
-void PageNotFound()
+void handleNotFound()
 {
 server.send(404, "text/plain", "404: Not found");
 }
@@ -58,14 +72,14 @@ Serial.println("\n");
 Serial.println("Connexion etablie!");
 Serial.print("Adresse IP: ");
 Serial.println(WiFi.localIP());
-server.on("/", PageHTML);
-server.on("/on", PageOn);
-server.on("/off", PageOff);
-server.onNotFound(PageNotFound);
+server.on("/", handleRoot);
+server.on("/on", handleOn);
+server.on("/off", handleOff);
+server.onNotFound(handleNotFound);
 server.begin();
 Serial.println("Serveur web actif!");
 }
 void loop()
 {
-server.handleClient();// Attente de demande du client
+server.handleClient();
 }
