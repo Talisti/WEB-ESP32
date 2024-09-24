@@ -1,7 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
-const char* ssid = "Votre SSID";
-const char* password = "Le mot de passe";
+const char* ssid = "BTS_CIEL";
+const char* password = "ERIR1234";
 WebServer server(80); // Création d'un serveur WEB qui écoute sur le port 80
 const int led = 2; // Led intégrée à l'ESP32
 
@@ -41,7 +41,7 @@ server.send(404, "text/plain", "404: Not found");
 }
 void setup()
 {
-Serial.begin(115200);
+Serial.begin(9600);
 delay(1000);
 Serial.println("\n");
 pinMode(led, OUTPUT);
