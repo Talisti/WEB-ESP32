@@ -2,74 +2,76 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 
-//const char *ssid = "Nom du réseau";
-//const char *password = "Mot de passe";
+// const char *ssid = "Nom du réseau";
+// const char *password = "Mot de passe";
 
-const char* ssid = "iPhone de Theo";
-const char* password = "lamoine1972";
+const char *ssid = "BTS_CIEL";
+const char *password = "ERIR1234";
 
-const int led = 2; // Led intégrée à l'ESP32
+// Set LED GPIO
+const int ledPin = 2;
+// Stores LED state
+String ledState;
+// Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
+// Replaces placeholder with LED state value
+String processor(const String &var)
+{
+    Serial.println(var);
+    if (var == "STATE")
+    {
+        if (digitalRead(2))
+        {
+            ledState = "MARCHE";
+        }
+        else
+        {
+            ledState = "ARRET";
+        }
+        Serial.print(ledState);
+        return ledState;
+    }
+    return String();
+}
 void setup()
 {
-
-Serial.begin(9600);
-pinMode(led, OUTPUT);
-digitalWrite(led, LOW);
-//---------------------------SPIFFS-------------------
-if(!SPIFFS.begin()) /* Démarrage du gestionnaire de fichiers SPIFFS */
-{
-Serial.println("Erreur SPIFFS...");
-return;
+    // Serial port for debugging purposes
+    Serial.begin(9600);
+    pinMode(2, OUTPUT);
+    // Initialize SPIFFS
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("An Error has occurred while mounting SPIFFS");
+        return;
+    }
+    // Connect to Wi-Fi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(1000);
+        Serial.println("Connecting to WiFi..");
+    }
+    // Print ESP32 Local IP Address
+    Serial.println(WiFi.localIP());
+    // Route for root / web page
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/index.html", String(), false, processor); });
+    // Route to load style.css file
+    server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(SPIFFS, "/style.css", "text/css"); });
+    // Route to set GPIO to HIGH
+    server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+digitalWrite(ledPin, HIGH);
+request->send(SPIFFS, "/index.html", String(), false, processor); });
+    // Route to set GPIO to LOW
+    server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+digitalWrite(ledPin, LOW);
+request->send(SPIFFS, "/index.html", String(), false, processor); });
+    // Start server
+    server.begin();
 }
-/* Détection des fichiers présents sur l'Esp32 */
-File root = SPIFFS.open("/"); /* Ouverture de la racine */
-File file = root.openNextFile(); /* Ouverture du 1er fichier */
-while(file) /* Boucle de test de présence des fichiers - Si plus de fichier
-s la boucle s'arrête*/
-{
-Serial.print("File: ");
-Serial.println(file.name());
-file.close();
-file = root.openNextFile(); /* Lecture du fichier suivant */
-}
-//-----------------------WIFI-----------------------------
-WiFi.begin(ssid, password); /* Connexion au réseau Wifi */
-Serial.print("Tentative de connexion...");
-while(WiFi.status() != WL_CONNECTED)
-{
-Serial.print(".");
-delay(100);
-}
-Serial.println("\n");
-Serial.println("Connexion etablie!");
-Serial.print("Adresse IP: ");
-Serial.println(WiFi.localIP());
-//--------------------------SERVEUR--------------------------
-/* Lorsque le serveur est actif , la page index.html est chargée */
-server.on("/w3.css", HTTP_GET, [](AsyncWebServerRequest *request){
-request->send(SPIFFS, "/w3.css", "text/css");
-});
-server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-request->send(SPIFFS, "/index.html", "text/html");
-});
-/* Lorsque l'on clique sur ON, on allume la led */
-server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-digitalWrite(led, HIGH);
-request->send(SPIFFS, "/index.html", "text/html");
-});
-/* Lorsque l'on clique sur OFF, on éteint la led */
-server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request)
-{
-digitalWrite(led, LOW);
-request->send(SPIFFS, "/index.html", "text/html");
-});
-/* On affiche que le serveur est actif */
-server.begin();
-Serial.println("Serveur actif!");
-}
-void loop() /* La loop est vide */
+void loop()
 {
 }
